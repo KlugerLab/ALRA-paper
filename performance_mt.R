@@ -1,57 +1,40 @@
 source('../ALRA/alra.R')
+library(SAVER)
 library(Rmagic)
-library(reticulate)
-#install_miniconda()
-##remove.packages('Rmagic')
-##install.packages('Rmagic')
-#library(SAVER)
-#library(scImpute)
-##x <- readRDS("SAVER-data/hrvatin.rds")
-reticulate::use_condaenv('magic')
-
-library(Rmagic)
-
-Sys.setenv(OPENBLAS_NUM_THREADS=1)
-if (!file.exists('data/hrvatin_full.rds')) {
-	x <- read.csv("SAVER-data/GSE102827_merged_all_raw.csv", header = TRUE, row.names = 1, check.names = FALSE)
-	x <- as.matrix(x)
-	# Filter out genes with expression less than 0.00003
-	x1 <- x[rowMeans(x) >= 0.00003, ]
-	# look at non-zero expression
-	# Filter out genes with non-zero expression in less than 4 cells
-	x2 <- x1[rowSums(x1 != 0) >= 4, ]
-	x <- x2
-	saveRDS(x,'data/hrvatin_full.rds')
+library(scImpute)
+if ( !file.exists( 'data/1M_neurons.RData')) {
+	A_norm <- read.csv('data/1M_neurons.csv',header=F)
+	save(A_norm,file='data/1M_neurons.RData')
 }else{
-	print("Reading existing data")
-	x <- readRDS('data/hrvatin_full.rds')
+	load('data/1M_neurons.RData')
 }
 
+
 sizes <- c(1E3, 5E3, 10E3, 20E3, 30E3, 40E3, 50E3)
-#alra_times <- rep(NA,length(sizes))
-#saver_times <- rep(NA,length(sizes))
-#saver_fast_times <- rep(NA,length(sizes))
+alra_times <- rep(NA,length(sizes))
+saver_times <- rep(NA,length(sizes))
+saver_fast_times <- rep(NA,length(sizes))
 magic_fast_times <- rep(NA,length(sizes))
-#dca_fast_times <- rep(NA,length(sizes))
-#scimpute_fast_times <- rep(NA,length(sizes))
+dca_fast_times <- rep(NA,length(sizes))
+scimpute_fast_times <- rep(NA,length(sizes))
 
 
-#for (i in 1:length(sizes)) {
-#	print(sprintf("Size: %d", sizes[i]))
-#	set.seed(5)
-#	samp.cells <- sample(1:ncol(x), sizes[i])
-#	x.sub <- x[,samp.cells]
-#	x.sub.t <- t(x.sub)
-#
-#	starttime <- proc.time()
-#		x_norm <- normalize_data(x.sub.t)
-#		k_choice <- choose_k(x_norm)
-#		print(sprintf("k=%d was chosen", k_choice$k))
-#		result.completed <- alra(x_norm,k_choice$k)
-#	endtime <- proc.time()-starttime
-#	alra_times[i] <- endtime['elapsed']
-#	save(alra_times,file="data/alra_fast_times2.RData")
-#}
+for (i in 1:length(sizes)) {
+	print(sprintf("Size: %d", sizes[i]))
+	set.seed(5)
+	samp.cells <- sample(1:ncol(x), sizes[i])
+	x.sub <- x[,samp.cells]
+	x.sub.t <- t(x.sub)
+
+	starttime <- proc.time()
+		x_norm <- normalize_data(x.sub.t)
+		k_choice <- choose_k(x_norm)
+		print(sprintf("k=%d was chosen", k_choice$k))
+		result.completed <- alra(x_norm,k_choice$k)
+	endtime <- proc.time()-starttime
+	alra_times[i] <- endtime['elapsed']
+	save(alra_times,file="data/alra_fast_times2.RData")
+}
 
 
 for (i in 1:length(sizes)) {
@@ -64,9 +47,8 @@ for (i in 1:length(sizes)) {
 	out <- magic(x.sub.t)
 	endtime <- proc.time()-starttime
 	magic_fast_times[i] <- endtime['elapsed']
-	save(sizes,magic_fast_times,file="data.bu/magic_fast_times_newversion.RData")
+	save(sizes,magic_fast_times,file="data/magic_fast_times2.RData")
 }
-fofo
 
 library(R.utils)
 

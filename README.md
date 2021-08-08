@@ -20,7 +20,7 @@
 ## Supplementary figures
 * Figure S1: alra_PBMC.R
 * Figure S2,S3: alra_derm.R
-* Figure S4: alra_PBMC.R
+* Figure S4: pbmc_gating.R
 * Figure S5: Lukassen.R
 * Figure S6-S8: alra_downsample2.R
 * Figure S9: alra_CiteSeq_CBMC.R

@@ -9,72 +9,24 @@ source("https://raw.githubusercontent.com/KlugerLab/ALRA/master/alra.R")
 source("https://raw.githubusercontent.com/KlugerLab/ALRA/master/alraSeurat2.R")
 
 
-
-##=============================================##
-## Functions
-
-# Combine data from multiple files
-combineData <- function(data1, data2, name1 = NULL, name2 = NULL, delim = "_"){
-  # read in data
-  # exp_pre <- read.table(data1, header = T,sep = "\t",stringsAsFactors = F, row.names = 1)
-  # exp_post <- read.table(data2, header = T,sep = "\t",stringsAsFactors = F, row.names = 1)
-  exp_pre <- data1
-  exp_post <- data2
-  if(!is.null(name1)){
-    colnames(exp_pre) <- paste(colnames(exp_pre), name1, sep = delim)
-  }
-  if(!is.null(name2)){
-    colnames(exp_post) <- paste(colnames(exp_post), name2, sep = delim)
-  }
-  
-  # find all genes
-  allgene <- unique(c(rownames(exp_pre), rownames(exp_post)))
-  missG_pre <- setdiff(allgene, rownames(exp_pre))
-  missG_post <- setdiff(allgene, rownames(exp_post))
-  
-  # create matrix with 0 for missing genes
-  miss_pre <- matrix(0, ncol = dim(exp_pre)[2], nrow = length(missG_pre))
-  rownames(miss_pre) <- missG_pre
-  colnames(miss_pre) <- colnames(exp_pre)
-  miss_post <- matrix(0, ncol = dim(exp_post)[2], nrow = length(missG_post))
-  rownames(miss_post) <- missG_post
-  colnames(miss_post) <- colnames(exp_post)
-  
-  # bind data
-  new_pre <- rbind(exp_pre, miss_pre)
-  new_post <- rbind(exp_post, miss_post)
-  new_pre <- new_pre[order(rownames(new_pre)),]
-  new_post <- new_post[order(rownames(new_post)),]
-  print(mean(rownames(new_pre) == rownames(new_post)))
-  data_new <- cbind(new_pre, new_post)
-  return(data_new)
-}
-
-
-
-
-
 ##=============================================##
 ## Data prep
 
 
 ## Data download
 
-# TODO: upload data to GEO
+# download data from https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE185638
+# and save to data/ folder
 
 
-## Combine data directly
+## Load data
 
-data_exp <- combineData(data1 = read.table("data/Run5B_gene_exon_tagged_dge.txt.gz",
-                                               sep = "\t", header = T, as.is = T, row.names = 1),
-                            data2 = read.table("data/Run5C_gene_exon_tagged_dge.txt.gz",
-                                               sep = "\t", header = T, as.is = T, row.names = 1),
-                            name1 = "Run5B", name2 = "Run5C")
+data_exp <- read.table("data/GSM5621018_Run5C_gene_exon_tagged_dge.txt.gz",
+                       sep = "\t", header = T, as.is = T, row.names = 1)
 
 
 # Seurat
-data_S <- CreateSeuratObject(raw.data = data_exp, min.genes = 0, names.delim = "_", names.field = 2)
-
+data_S <- CreateSeuratObject(raw.data = data_exp, min.genes = 0)
 
 # transcript sum filtering
 sum(data_S@meta.data$nUMI >= 1000)
@@ -242,7 +194,7 @@ flow_pdgfra <- read.csv('data/PdgfraEGFP_histogram_data.csv', stringsAsFactors=F
 flow_pdgfra2 <- rep(flow_pdgfra$Compensated.Al488.channel, times = flow_pdgfra$Number.of.cells)
 
 myggplot <- ggplot() + theme_cowplot() + 
-  geom_density( fill="#3182bd",data = data.frame(x = flow_pdgfra2), aes(x)) + scale_x_log10() + xlab ('Fluorescence')
+  geom_density( fill="#3182bd",data = data.frame(x = flow_pdgfra2), aes(x)) + scale_x_log10() + xlab ('EGFP fluorescence')
 ggsave(myggplot, filename = "figs/flow_cytometry_pdgfra.pdf", width = 6, height = 4)
 
 
